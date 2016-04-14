@@ -8,8 +8,8 @@ services:
       - "80:80"
     environment:
       - "SERVICE=myapp"
+      - "CONSUL_URL=${CONSUL_URL}"
       - "constraint:host==load-balancer"
-    env_file: .load-balancer.env
     networks:
       - frontend
 
