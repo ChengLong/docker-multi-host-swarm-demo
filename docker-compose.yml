@@ -1,0 +1,46 @@
+version: '2'
+
+services:
+  load-balancer:
+    image: chenglong/nginx-consul-template
+    container_name: load-balancer
+    ports:
+      - "80:80"
+    environment:
+      - "SERVICE=myapp"
+      - "constraint:host==load-balancer"
+    env_file: .load-balancer.env
+    networks:
+      - frontend
+
+  app:
+    image: chenglong/simple-node
+    ports:
+      - "8080"
+    environment:
+      - "SERVICE_NAME=myapp"
+      - "constraint:host==app-server"
+    networks:
+      - frontend
+      - backend
+
+  redis:
+    image: redis
+    container_name: redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    environment:
+      - "constraint:host==database"
+    networks:
+      - backend
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  frontend:
+    driver: overlay
+  backend:
+    driver: overlay
