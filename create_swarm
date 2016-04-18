@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -e
+
+# create swarm master
+docker-machine create \
+    -d virtualbox \
+    --swarm \
+    --swarm-master \
+    --swarm-discovery="consul://$(docker-machine ip consul):8500"\
+    --engine-opt="cluster-store=consul://$(docker-machine ip consul):8500" \
+    --engine-opt="cluster-advertise=eth1:2376" \
+    swarm-master
+
+# create load balancer
+docker-machine create \
+	-d virtualbox \
+    --swarm \
+    --swarm-discovery="consul://$(docker-machine ip consul):8500"\
+    --engine-opt="cluster-store=consul://$(docker-machine ip consul):8500" \
+    --engine-opt="cluster-advertise=eth1:2376" \
+    --engine-label host=load-balancer \
+    load-balancer
+
+# create app server 1 and 2
+for i in `seq 1 2`
+do
+  docker-machine create \
+    -d virtualbox \
+      --swarm \
+      --swarm-discovery="consul://$(docker-machine ip consul):8500"\
+      --engine-opt="cluster-store=consul://$(docker-machine ip consul):8500" \
+      --engine-opt="cluster-advertise=eth1:2376" \
+      --engine-label host=app-server \
+      --virtualbox-cpu-count "2" \
+      --virtualbox-memory "2048" \
+      app-server-$i
+done
+
+# create database host
+docker-machine create \
+	-d virtualbox \
+    --swarm \
+    --swarm-discovery="consul://$(docker-machine ip consul):8500"\
+    --engine-opt="cluster-store=consul://$(docker-machine ip consul):8500" \
+    --engine-opt="cluster-advertise=eth1:2376" \
+    --engine-label host=database \
+    --virtualbox-disk-size "40000" \
+    database
+
+eval $(docker-machine env -swarm swarm-master)
