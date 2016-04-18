@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
+docker-machine create -d virtualbox consul
+eval $(docker-machine env consul)
+docker run -d -p 8500:8500 -h consul --restart always gliderlabs/consul-server -bootstrap
