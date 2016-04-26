@@ -9,6 +9,6 @@ for host in ${hosts[@]}; do
     --name=registrator \
     -h $(docker-machine ip ${host}) \
     -v=/var/run/docker.sock:/tmp/docker.sock \
-    gliderlabs/registrator:latest \
+    gliderlabs/registrator:v6 \
     consul://$(docker-machine ip consul):8500
 done
